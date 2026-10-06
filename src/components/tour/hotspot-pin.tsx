@@ -21,6 +21,7 @@ export function HotspotPin({
   className,
   accent,
   number,
+  delay = 0,
 }: {
   x: number;
   y: number;
@@ -36,6 +37,8 @@ export function HotspotPin({
   className?: string;
   accent?: string;
   number?: number;
+  /** Stagger pulses so a plan full of pins breathes instead of flashing in unison. */
+  delay?: number;
 }) {
   const showLabel = labelMode === "always" || (labelMode === "auto" && active);
   return (
@@ -56,7 +59,7 @@ export function HotspotPin({
       {pulse ? (
         <span
           className="absolute inset-0 rounded-full animate-pulse-ring"
-          style={{ backgroundColor: accent ?? "var(--color-accent)", opacity: active ? 0.5 : 0.35 }}
+          style={{ backgroundColor: accent ?? "var(--color-accent)", animationDelay: `${delay}ms` }}
           aria-hidden="true"
         />
       ) : null}

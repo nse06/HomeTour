@@ -4,7 +4,7 @@ import { analyticsEvents, floors, media, properties, rooms, tours, type Media } 
 import { newId } from "@/lib/ids";
 import { slugify } from "@/lib/slug";
 import { toFloorDTO, toMediaDTO, toPropertyDTO, toRoomDTO, toTourDTO } from "./mappers";
-import type { MediaDTO, PropertyGraph, RoomDTO } from "./types";
+import type { MediaDTO, PropertyGraph } from "./types";
 
 export async function loadPropertyGraph(propertyId: string): Promise<PropertyGraph | null> {
   const [property] = await db.select().from(properties).where(eq(properties.id, propertyId)).limit(1);
@@ -70,37 +70,7 @@ export async function getPublishedTourGraph(slug: string): Promise<PropertyGraph
   return loadPropertyGraph(tour.propertyId);
 }
 
-/** Rooms in tour order, limited to ones with something to show. */
-export function navigableRooms(graph: Pick<PropertyGraph, "rooms" | "media">): RoomDTO[] {
-  const withMedia = new Set(graph.media.filter((m) => m.roomId && m.status === "ready").map((m) => m.roomId));
-  return graph.rooms.filter((r) => withMedia.has(r.id) || (r.description && r.description.trim().length > 0));
-}
-
-/** Cover photo: explicit choice → first exterior photo → first photo. */
-export function pickCover(graph: Pick<PropertyGraph, "property" | "rooms" | "media">): MediaDTO | null {
-  const photos = graph.media.filter((m) => (m.kind === "photo" || m.kind === "pano") && m.status === "ready");
-  if (photos.length === 0) return null;
-  const explicit = graph.property.coverMediaId && photos.find((m) => m.id === graph.property.coverMediaId);
-  if (explicit) return explicit;
-  const exterior = graph.rooms.find((r) => r.category === "exterior");
-  if (exterior) {
-    const cover = exterior.coverMediaId && photos.find((m) => m.id === exterior.coverMediaId);
-    if (cover) return cover;
-    const first = photos.find((m) => m.roomId === exterior.id && m.kind === "photo");
-    if (first) return first;
-  }
-  return photos.find((m) => m.kind === "photo") ?? photos[0];
-}
-
-/** Photos of a room in display order, cover first. */
-export function roomMedia(room: RoomDTO, all: MediaDTO[]): MediaDTO[] {
-  const list = all.filter((m) => m.roomId === room.id && m.status === "ready");
-  if (room.coverMediaId) {
-    const idx = list.findIndex((m) => m.id === room.coverMediaId);
-    if (idx > 0) list.unshift(...list.splice(idx, 1));
-  }
-  return list;
-}
+export { navigableRooms, pickCover, roomMedia, toPublicGraph } from "./derive";
 
 export interface DashboardProperty {
   id: string;

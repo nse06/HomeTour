@@ -2,9 +2,9 @@
  * Client-safe data shapes. Server code maps DB rows to these (with public URLs resolved);
  * client components import only these types.
  */
-import type { MediaKind, PropertyType, RoomRegion, TourSettings } from "@/lib/db/schema";
+import type { MediaKind, PropertyType, RoomRegion, TourCta, TourSettings } from "@/lib/db/schema";
 
-export type { MediaKind, PropertyType, RoomRegion, TourSettings };
+export type { MediaKind, PropertyType, RoomRegion, TourCta, TourSettings };
 
 export interface MediaSources {
   thumb?: string;
