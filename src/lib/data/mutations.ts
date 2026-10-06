@@ -152,6 +152,10 @@ export async function reorderRooms(propertyId: string, ids: string[]): Promise<v
     if (!valid.has(id)) continue;
     await db.update(rooms).set({ sortOrder: order++ }).where(eq(rooms.id, id));
   }
+  const tour = await tourForProperty(propertyId);
+  if (tour && tour.settings?.roomOrder !== "manual") {
+    await db.update(tours).set({ settings: { ...tour.settings, roomOrder: "manual" } }).where(eq(tours.id, tour.id));
+  }
 }
 
 /** User-initiated move: the assignment becomes sticky so AI re-organizing never undoes it. */

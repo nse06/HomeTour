@@ -33,6 +33,8 @@ export interface TourSettings {
   showContact?: boolean;
   cta?: TourCta;
   noindex?: boolean;
+  /** "manual" once the owner reorders rooms; the AI organizer then leaves the order alone. */
+  roomOrder?: "auto" | "manual";
 }
 
 /* ------------------------------------------------------------------ */
