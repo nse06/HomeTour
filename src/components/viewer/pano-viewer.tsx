@@ -176,7 +176,7 @@ export function PanoViewer({ src, title, onClose }: { src: string; title?: strin
   }
 
   return (
-    <div ref={wrapRef} className="fixed inset-0 z-[70] bg-black animate-fade-in" role="dialog" aria-modal="true" aria-label={`${title ?? "360°"} view`}>
+    <div ref={wrapRef} className="fixed inset-0 z-[70] bg-black animate-fade-in" role="dialog" aria-modal="true" aria-label={`360° view${title ? ` of ${title}` : ""}`}>
       <canvas ref={canvasRef} className="h-full w-full cursor-grab touch-none active:cursor-grabbing" />
       {loading && !error ? (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-white/70">Loading 360° view…</div>

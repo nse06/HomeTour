@@ -255,7 +255,7 @@ test("seeded demo tour and marketing pages render", async ({ page }) => {
   await page.waitForURL(/\/t\/modern-chicago-home/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Modern 3-Bedroom Chicago Home");
   await page.getByRole("button", { name: "Bathroom", exact: true }).click();
-  await page.getByRole("button", { name: /360° view/ }).click();
+  await page.getByRole("button", { name: /^360° view/ }).click();
   await expect(page.getByRole("dialog", { name: /360° view/ })).toBeVisible();
   for (const path of ["/pricing", "/interactive-floor-plan", "/airbnb-virtual-tour", "/sitemap.xml", "/robots.txt"]) {
     const r = await page.request.get(path);
