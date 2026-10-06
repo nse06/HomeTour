@@ -62,6 +62,7 @@ export interface EditorState {
   reorderMedia(orderedIds: string[]): Promise<void>;
   deleteMedia(ids: string[]): Promise<void>;
   upsertMedia(items: MediaDTO[]): void;
+  upsertRooms(items: RoomDTO[]): void;
 
   addRoom(input: { name: string; category?: string; icon?: string; floorId?: string | null; hotspot?: { x: number; y: number } | null; region?: RoomRegion | null }): Promise<RoomDTO | null>;
   updateRoom(id: string, patch: RoomPatch): Promise<void>;
@@ -222,6 +223,14 @@ function createEditorStore(initial: PropertyGraph) {
           const byId = new Map(g.media.map((m) => [m.id, m]));
           for (const m of items) byId.set(m.id, m);
           return { ...g, media: [...byId.values()] };
+        });
+      },
+
+      upsertRooms(items) {
+        patchGraph((g) => {
+          const byId = new Map(g.rooms.map((r) => [r.id, r]));
+          for (const r of items) byId.set(r.id, r);
+          return { ...g, rooms: [...byId.values()].sort((a, b) => a.sortOrder - b.sortOrder) };
         });
       },
 

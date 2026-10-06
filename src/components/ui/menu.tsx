@@ -67,3 +67,28 @@ export function MenuLabel({ children }: { children: ReactNode }) {
 export function MenuSeparator() {
   return <M.Separator className="my-1 h-px bg-line" />;
 }
+
+export const MenuSub = M.Sub;
+
+export function MenuSubTrigger({ children, icon }: { children: ReactNode; icon?: ReactNode }) {
+  return (
+    <M.SubTrigger className="flex cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-ink-2 outline-none data-[highlighted]:bg-sunken data-[state=open]:bg-sunken">
+      {icon ? <span className="flex h-4 w-4 items-center justify-center [&>svg]:h-4 [&>svg]:w-4">{icon}</span> : null}
+      <span className="flex-1">{children}</span>
+      <span aria-hidden="true" className="text-ink-4">›</span>
+    </M.SubTrigger>
+  );
+}
+
+export function MenuSubContent({ children }: { children: ReactNode }) {
+  return (
+    <M.Portal>
+      <M.SubContent
+        sideOffset={4}
+        className="z-50 max-h-80 min-w-48 overflow-y-auto rounded-2xl bg-surface p-1.5 shadow-lift ring-1 ring-line data-[state=open]:animate-scale-in"
+      >
+        {children}
+      </M.SubContent>
+    </M.Portal>
+  );
+}
