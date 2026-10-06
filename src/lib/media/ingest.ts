@@ -153,3 +153,30 @@ export async function deleteMediaObjects(rows: Media[]): Promise<void> {
     }
   }
 }
+
+/** Re-generates variants from the stored original (e.g. when a photo is marked as 360°). */
+export async function reprocessMedia(row: Media, opts: { forcePanorama: boolean }): Promise<Media> {
+  if (!row.originalKey) throw new IngestError("Original file not available.");
+  const store = await storage();
+  const original = await store.get(row.originalKey);
+  if (!original) throw new IngestError("Original file not available.");
+  const processed = await processImage(Buffer.from(original.body), { forcePanorama: opts.forcePanorama });
+  await Promise.all(
+    processed.variants.map((v) => store.put(variantKey(row.propertyId, row.id, v.name), v.buffer, "image/webp")),
+  );
+  const stale = Object.entries(row.variants ?? {})
+    .filter(([name]) => !processed.variants.some((v) => v.name === name))
+    .flatMap(([, v]) => (v ? [v.key] : []));
+  if (stale.length) await store.delete(stale);
+  const [updated] = await db
+    .update(media)
+    .set({
+      kind: processed.kind,
+      variants: variantsToRecord(processed.variants, (name) => variantKey(row.propertyId, row.id, name)),
+      width: processed.width,
+      height: processed.height,
+    })
+    .where(eq(media.id, row.id))
+    .returning();
+  return updated;
+}
