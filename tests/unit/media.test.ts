@@ -11,11 +11,11 @@ const bytes = (...xs: (number | string)[]) =>
 describe("sniff", () => {
   it("detects formats by magic bytes", () => {
     expect(sniff(bytes(0xff, 0xd8, 0xff, 0xe0)).kind).toBe("image");
-    expect(sniff(bytes(0x89, "PNG")).ext).toBe("png");
-    expect(sniff(bytes("RIFF", 0, 0, 0, 0, "WEBP")).ext).toBe("webp");
+    expect(sniff(bytes(0x89, "PNG"))).toMatchObject({ ext: "png" });
+    expect(sniff(bytes("RIFF", 0, 0, 0, 0, "WEBP"))).toMatchObject({ ext: "webp" });
     expect(sniff(bytes(0, 0, 0, 0x18, "ftypheic")).kind).toBe("heic");
     expect(sniff(bytes(0, 0, 0, 0x18, "ftypisom")).kind).toBe("video");
-    expect(sniff(bytes(0, 0, 0, 0x18, "ftypqt  ")).ext).toBe("mov");
+    expect(sniff(bytes(0, 0, 0, 0x18, "ftypqt  "))).toMatchObject({ ext: "mov" });
     expect(sniff(bytes("%PDF-1.7")).kind).toBe("pdf");
     expect(sniff(bytes("hello world, not an image")).kind).toBe("unknown");
   });

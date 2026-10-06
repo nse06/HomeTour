@@ -7,7 +7,7 @@ import { toPublicGraph } from "@/lib/data/derive";
 import { loadPropertyGraph } from "@/lib/data/queries";
 import { db } from "@/lib/db";
 import { properties } from "@/lib/db/schema";
-import { getAppUrl } from "@/lib/env";
+import { requestOrigin } from "@/lib/origin";
 import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +32,7 @@ export default async function PreviewPage(props: PageProps<"/app/p/[id]/preview"
           Back to editor
         </Link>
       </div>
-      <TourViewer graph={toPublicGraph(graph)} mode="preview" shareUrl={`${getAppUrl()}/t/${graph.tour.slug}`} />
+      <TourViewer graph={toPublicGraph(graph)} mode="preview" shareUrl={`${await requestOrigin()}/t/${graph.tour.slug}`} />
     </div>
   );
 }

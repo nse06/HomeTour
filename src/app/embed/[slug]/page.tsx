@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { TourViewer } from "@/components/viewer/tour-viewer";
 import { toPublicGraph } from "@/lib/data/derive";
 import { getPublishedTourGraph } from "@/lib/data/queries";
-import { getAppUrl } from "@/lib/env";
+import { requestOrigin } from "@/lib/origin";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,7 @@ export default async function EmbedPage(props: PageProps<"/embed/[slug]">) {
     <TourViewer
       graph={toPublicGraph(graph)}
       mode="embed"
-      shareUrl={`${getAppUrl()}/t/${slug}`}
+      shareUrl={`${await requestOrigin()}/t/${slug}`}
       initialRoom={typeof room === "string" ? room : null}
     />
   );

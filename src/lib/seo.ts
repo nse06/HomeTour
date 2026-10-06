@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { navigableRooms, pickCover, roomMedia } from "@/lib/data/derive";
 import type { PropertyGraph, PropertyType } from "@/lib/data/types";
-import { getAppUrl } from "@/lib/env";
 import { propertyFacts } from "@/lib/tour";
 import { pluralize } from "@/lib/utils";
 
@@ -15,7 +14,7 @@ const SCHEMA_TYPES: Record<PropertyType, string> = {
   other: "Place",
 };
 
-const absolute = (url: string) => (/^https?:\/\//.test(url) ? url : `${getAppUrl()}${url}`);
+const absolute = (origin: string, url: string) => (/^https?:\/\//.test(url) ? url : `${origin}${url}`);
 
 export function tourDescription(graph: PropertyGraph): string {
   if (graph.property.description) return graph.property.description.slice(0, 155);
@@ -25,41 +24,42 @@ export function tourDescription(graph: PropertyGraph): string {
   return `${lead}Explore ${pluralize(rooms.length, "room")} in an interactive walkthrough with a clickable floor plan and photo galleries.`.slice(0, 160);
 }
 
-export function tourMetadata(graph: PropertyGraph, path: string): Metadata {
+export function tourMetadata(graph: PropertyGraph, path: string, origin: string): Metadata {
   const cover = pickCover(graph);
-  const image = cover?.src.lg ?? cover?.src.md;
+  const rawImage = cover?.src.lg ?? cover?.src.md;
+  const image = rawImage ? absolute(origin, rawImage) : undefined;
   const title = graph.property.address ? `${graph.property.tourTitle} — ${graph.property.address}` : graph.property.tourTitle;
   const description = tourDescription(graph);
   return {
     title: { absolute: title },
     description,
-    alternates: { canonical: path },
+    alternates: { canonical: `${origin}${path}` },
     robots: graph.tour.settings?.noindex ? { index: false, follow: false } : undefined,
     openGraph: {
       type: "website",
       title: graph.property.tourTitle,
       description,
-      url: path,
+      url: `${origin}${path}`,
       images: image ? [{ url: image, width: cover?.width ?? undefined, height: cover?.height ?? undefined, alt: graph.property.tourTitle }] : undefined,
     },
     twitter: { card: "summary_large_image", title: graph.property.tourTitle, description, images: image ? [image] : undefined },
   };
 }
 
-export function tourJsonLd(graph: PropertyGraph, path: string) {
+export function tourJsonLd(graph: PropertyGraph, path: string, origin: string) {
   const p = graph.property;
   const rooms = navigableRooms(graph);
   const images = rooms
     .flatMap((r) => roomMedia(r, graph.media).slice(0, 2))
     .filter((m) => m.kind === "photo" && m.src.lg)
     .slice(0, 8)
-    .map((m) => absolute(m.src.lg!));
+    .map((m) => absolute(origin, m.src.lg!));
   return {
     "@context": "https://schema.org",
     "@type": SCHEMA_TYPES[p.propertyType],
     name: p.tourTitle,
     description: tourDescription(graph),
-    url: absolute(path),
+    url: absolute(origin, path),
     image: images,
     ...(p.address ? { address: p.address } : {}),
     ...(p.bedrooms ? { numberOfBedrooms: p.bedrooms } : {}),
