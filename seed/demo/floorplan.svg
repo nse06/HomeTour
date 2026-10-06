@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1240" viewBox="0 0 1600 1240">
+  <defs>
+    <pattern id="planks" width="1600" height="14" patternUnits="userSpaceOnUse">
+      <rect width="1600" height="14" fill="#F2EADF"/>
+      <line x1="0" y1="13.5" x2="1600" y2="13.5" stroke="#E4D7C5" stroke-width="1"/>
+    </pattern>
+    <pattern id="tiles" width="24" height="24" patternUnits="userSpaceOnUse">
+      <rect width="24" height="24" fill="#FFFFFF"/>
+      <path d="M24 0V24H0" fill="none" stroke="#F0EDE7" stroke-width="1"/>
+    </pattern>
+    <pattern id="paving" width="36" height="36" patternUnits="userSpaceOnUse">
+      <rect width="36" height="36" fill="#ECE8E0"/>
+      <path d="M36 0V36H0" fill="none" stroke="#E0DAD0" stroke-width="1.2"/>
+    </pattern>
+    <style>
+      .wall { stroke: #2A2826; stroke-linecap: square; fill: none; }
+      .ext { stroke-width: 12; }
+      .int { stroke-width: 7; }
+      .gap { fill: #FFFFFF; }
+      .leaf { stroke: #2A2826; stroke-width: 2.5; fill: none; }
+      .swing { stroke: #9C968B; stroke-width: 1.2; fill: none; stroke-dasharray: 4 4; }
+      .glass { stroke: #2A2826; stroke-width: 1.6; fill: none; }
+      .furn { stroke: #C3BCAF; stroke-width: 2; fill: #F5F2EC; }
+      .furn-soft { stroke: #CFC9BD; stroke-width: 1.5; fill: #FAF8F4; }
+      .label { font-family: Inter, 'Helvetica Neue', Arial, sans-serif; font-size: 21px; font-weight: 600; letter-spacing: 3px; fill: #5F5A52; text-anchor: middle; }
+      .dims { font-family: Inter, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 400; letter-spacing: 0.5px; fill: #A39D92; text-anchor: middle; }
+      .outdoor { font-family: Inter, 'Helvetica Neue', Arial, sans-serif; font-size: 17px; font-weight: 600; letter-spacing: 3px; fill: #8C9279; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <!-- Site -->
+  <rect width="1600" height="1240" fill="#FBFAF7"/>
+  <rect x="40" y="30" width="1520" height="300" rx="28" fill="#EEF1E5"/>
+  <rect x="40" y="1012" width="1520" height="200" rx="28" fill="#EEF1E5"/>
+  <!-- Driveway + front path -->
+  <rect x="1090" y="1018" width="230" height="222" fill="url(#paving)"/>
+  <rect x="826" y="1018" width="78" height="222" fill="url(#paving)"/>
+  <!-- Shrubs -->
+  <g fill="#DCE3CF" stroke="#C9D3B8" stroke-width="1.5">
+    <circle cx="96" cy="88" r="34"/><circle cx="150" cy="70" r="22"/><circle cx="1520" cy="290" r="26"/>
+    <circle cx="210" cy="1080" r="30"/><circle cx="268" cy="1100" r="20"/><circle cx="1480" cy="1090" r="34"/>
+    <circle cx="700" cy="1110" r="22"/><circle cx="1000" cy="1150" r="26"/>
+  </g>
+  <!-- The big gum tree -->
+  <circle cx="1268" cy="168" r="118" fill="#DFE6D2" stroke="#C6D0B3" stroke-width="2"/>
+  <circle cx="1268" cy="168" r="70" fill="none" stroke="#CDD6BC" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <circle cx="1268" cy="168" r="12" fill="#B9C3A4"/>
+
+  <!-- Deck -->
+  <rect x="250" y="160" width="760" height="166" fill="url(#planks)" stroke="#D9CBB6" stroke-width="2"/>
+  <!-- Outdoor dining -->
+  <g>
+    <rect x="690" y="206" width="170" height="64" rx="6" class="furn"/>
+    <rect x="702" y="186" width="34" height="16" rx="4" class="furn-soft"/><rect x="758" y="186" width="34" height="16" rx="4" class="furn-soft"/><rect x="814" y="186" width="34" height="16" rx="4" class="furn-soft"/>
+    <rect x="702" y="274" width="34" height="16" rx="4" class="furn-soft"/><rect x="758" y="274" width="34" height="16" rx="4" class="furn-soft"/><rect x="814" y="274" width="34" height="16" rx="4" class="furn-soft"/>
+    <rect x="922" y="178" width="58" height="34" rx="4" class="furn"/>
+    <rect x="276" y="178" width="200" height="40" rx="8" class="furn-soft"/>
+  </g>
+
+  <!-- Interior floor -->
+  <rect x="140" y="320" width="1320" height="700" fill="#FFFFFF"/>
+  <rect x="560" y="660" width="210" height="210" fill="url(#tiles)"/>
+  <rect x="560" y="870" width="210" height="150" fill="url(#tiles)"/>
+
+  <!-- ===== Furniture ===== -->
+  <!-- Living -->
+  <path d="M176 470h250v52H232v104h-56z" class="furn"/>
+  <rect x="176" y="470" width="250" height="18" rx="6" class="furn-soft"/>
+  <circle cx="330" cy="574" r="40" class="furn-soft"/>
+  <rect x="470" y="520" width="78" height="74" rx="14" class="furn"/>
+  <rect x="160" y="350" width="300" height="22" rx="4" class="furn-soft"/>
+  <!-- Kitchen -->
+  <rect x="640" y="334" width="342" height="48" class="furn"/>
+  <rect x="694" y="344" width="64" height="28" rx="8" class="furn-soft"/>
+  <g class="furn-soft"><circle cx="864" cy="352" r="8"/><circle cx="890" cy="352" r="8"/><circle cx="864" cy="368" r="8"/><circle cx="890" cy="368" r="8"/></g>
+  <rect x="700" y="468" width="220" height="64" rx="4" class="furn"/>
+  <g class="furn-soft"><circle cx="730" cy="550" r="13"/><circle cx="783" cy="550" r="13"/><circle cx="836" cy="550" r="13"/><circle cx="889" cy="550" r="13"/></g>
+  <!-- Dining -->
+  <rect x="1100" y="430" width="250" height="88" rx="10" class="furn"/>
+  <g class="furn-soft">
+    <rect x="1112" y="404" width="40" height="20" rx="6"/><rect x="1172" y="404" width="40" height="20" rx="6"/><rect x="1236" y="404" width="40" height="20" rx="6"/><rect x="1298" y="404" width="40" height="20" rx="6"/>
+    <rect x="1112" y="524" width="40" height="20" rx="6"/><rect x="1172" y="524" width="40" height="20" rx="6"/><rect x="1236" y="524" width="40" height="20" rx="6"/><rect x="1298" y="524" width="40" height="20" rx="6"/>
+  </g>
+  <rect x="1404" y="360" width="38" height="190" rx="4" class="furn-soft"/>
+  <!-- Primary bedroom -->
+  <rect x="236" y="806" width="200" height="200" rx="8" class="furn"/>
+  <rect x="236" y="972" width="200" height="34" rx="6" class="furn-soft"/>
+  <rect x="250" y="940" width="78" height="28" rx="8" class="furn-soft"/><rect x="344" y="940" width="78" height="28" rx="8" class="furn-soft"/>
+  <rect x="184" y="968" width="40" height="38" rx="4" class="furn-soft"/><rect x="448" y="968" width="40" height="38" rx="4" class="furn-soft"/>
+  <rect x="156" y="680" width="34" height="210" rx="3" class="furn-soft"/>
+  <!-- Bath -->
+  <rect x="576" y="676" width="70" height="150" rx="22" class="furn"/>
+  <rect x="680" y="676" width="74" height="40" rx="4" class="furn"/>
+  <ellipse cx="717" cy="696" rx="20" ry="12" class="furn-soft"/>
+  <rect x="700" y="790" width="40" height="22" rx="6" class="furn-soft"/><ellipse cx="720" cy="836" rx="18" ry="22" class="furn"/>
+  <!-- Laundry -->
+  <rect x="576" y="940" width="62" height="62" rx="6" class="furn"/><circle cx="607" cy="971" r="20" class="furn-soft"/>
+  <rect x="646" y="940" width="62" height="62" rx="6" class="furn"/><circle cx="677" cy="971" r="20" class="furn-soft"/>
+  <!-- Entry -->
+  <rect x="926" y="760" width="22" height="160" rx="3" class="furn-soft"/>
+  <!-- Bedroom 2 -->
+  <rect x="1016" y="842" width="140" height="164" rx="8" class="furn"/>
+  <rect x="1016" y="974" width="140" height="32" rx="6" class="furn-soft"/>
+  <rect x="1032" y="946" width="108" height="24" rx="8" class="furn-soft"/>
+  <rect x="1168" y="972" width="30" height="34" rx="4" class="furn-soft"/>
+  <!-- Bedroom 3 -->
+  <rect x="1266" y="842" width="140" height="164" rx="8" class="furn"/>
+  <rect x="1266" y="974" width="140" height="32" rx="6" class="furn-soft"/>
+  <rect x="1282" y="946" width="108" height="24" rx="8" class="furn-soft"/>
+  <rect x="1226" y="676" width="140" height="30" rx="3" class="furn-soft"/>
+
+  <!-- ===== Walls ===== -->
+  <rect x="140" y="320" width="1320" height="700" class="wall ext"/>
+  <!-- rear/front divider with openings to living (none), hall (770-960) -->
+  <path d="M140 660H470 M540 660H770 M960 660H1380 M1450 660H1460" class="wall int"/>
+  <!-- open-plan stubs -->
+  <path d="M620 320V396 M620 594V660 M1000 320V396 M1000 594V660" class="wall int"/>
+  <!-- front row partitions -->
+  <path d="M560 660V1020 M560 870H770 M770 660V718 M770 786V920 M770 990V1020 M960 660V1020 M1210 660V1020" class="wall int"/>
+  <path d="M960 700V770" stroke="#FFFFFF" stroke-width="9"/>
+
+  <!-- ===== Openings: doors ===== -->
+  <!-- Front door -->
+  <rect x="832" y="1012" width="68" height="16" class="gap"/>
+  <path d="M832 1020V952" class="leaf"/><path d="M900 1020A68 68 0 0 0 832 952" class="swing"/>
+  <!-- Primary bedroom -->
+  <path d="M540 660V728" class="leaf"/><path d="M470 660A70 70 0 0 0 540 728" class="swing"/>
+  <!-- Bath -->
+  <path d="M770 718H702" class="leaf"/><path d="M770 786A68 68 0 0 1 702 718" class="swing"/>
+  <!-- Laundry -->
+  <path d="M770 920H702" class="leaf"/><path d="M770 990A70 70 0 0 0 702 920" class="swing"/>
+  <!-- Bedroom 2 -->
+  <path d="M960 700H1028" class="leaf"/><path d="M960 770A70 70 0 0 0 1028 700" class="swing"/>
+  <!-- Bedroom 3 -->
+  <path d="M1450 660V728" class="leaf"/><path d="M1380 660A70 70 0 0 0 1450 730" class="swing"/>
+  <!-- Sliding doors: living → deck -->
+  <rect x="300" y="312" width="300" height="16" class="gap"/>
+  <path d="M300 317H460 M440 323H600" class="glass"/>
+  <!-- Sliding doors: dining → garden -->
+  <rect x="1090" y="312" width="280" height="16" class="gap"/>
+  <path d="M1090 317H1240 M1220 323H1370" class="glass"/>
+
+  <!-- ===== Windows ===== -->
+  <g>
+    <rect x="132" y="400" width="16" height="180" class="gap"/><path d="M136 400V580 M144 400V580" class="glass"/>
+    <rect x="680" y="312" width="260" height="16" class="gap"/><path d="M680 316H940 M680 324H940" class="glass"/>
+    <rect x="1452" y="390" width="16" height="190" class="gap"/><path d="M1456 390V580 M1464 390V580" class="glass"/>
+    <rect x="132" y="740" width="16" height="190" class="gap"/><path d="M136 740V930 M144 740V930" class="glass"/>
+    <rect x="600" y="1012" width="130" height="16" class="gap"/><path d="M600 1016H730 M600 1024H730" class="glass"/>
+    <rect x="1010" y="1012" width="150" height="16" class="gap"/><path d="M1010 1016H1160 M1010 1024H1160" class="glass"/>
+    <rect x="1452" y="740" width="16" height="200" class="gap"/><path d="M1456 740V940 M1464 740V940" class="glass"/>
+  </g>
+
+  <!-- ===== Labels ===== -->
+  <text x="390" y="430" class="label">LIVING ROOM</text><text x="390" y="455" class="dims">19'6" × 14'2"</text>
+  <text x="810" y="428" class="label">KITCHEN</text><text x="810" y="453" class="dims">14'8" × 13'0"</text>
+  <text x="1225" y="604" class="label">DINING</text><text x="1225" y="629" class="dims">17'10" × 13'0"</text>
+  <text x="330" y="720" class="label">PRIMARY BEDROOM</text><text x="330" y="745" class="dims">16'2" × 13'10"</text>
+  <text x="680" y="762" class="label" style="font-size:17px">BATH</text>
+  <text x="632" y="908" class="label" style="font-size:15px;letter-spacing:2px">LAUNDRY</text>
+  <text x="865" y="840" class="label" style="font-size:17px">ENTRY</text>
+  <text x="1085" y="782" class="label" style="font-size:18px">BEDROOM 2</text><text x="1085" y="805" class="dims">11'4" × 13'10"</text>
+  <text x="1335" y="782" class="label" style="font-size:18px">BEDROOM 3</text><text x="1335" y="805" class="dims">10'6" × 13'10"</text>
+  <text x="560" y="246" class="outdoor">DECK</text>
+  <text x="1470" y="206" class="outdoor" style="font-size:15px">GARDEN</text>
+  <text x="1205" y="1140" class="outdoor" style="font-size:15px">DRIVEWAY</text>
+  <text x="640" y="1180" class="outdoor" style="font-size:15px">FRONT YARD</text>
+
+  <!-- North arrow + scale -->
+  <g transform="translate(96 1150)">
+    <circle r="26" fill="#FFFFFF" stroke="#D5CFC4" stroke-width="1.5"/>
+    <path d="M0 -16L7 6L0 1L-7 6Z" fill="#2A2826"/>
+    <text y="-32" class="dims" style="font-size:13px;font-weight:600;fill:#6E685F">N</text>
+  </g>
+  <g transform="translate(1380 1190)">
+    <path d="M0 0H120 M0 -6V6 M60 -4V4 M120 -6V6" stroke="#8F897E" stroke-width="1.5"/>
+    <text x="60" y="-12" class="dims" style="font-size:12px">10 ft</text>
+  </g>
+</svg>
