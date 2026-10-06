@@ -171,13 +171,17 @@ export function TourStep() {
   }
 
   const hint =
-    mode === "draw"
-      ? `Drag on the plan to outline ${selected?.name}.`
-      : selected && (!selected.hotspot || mode === "place")
-        ? `Tap the plan where ${selected.name} is.`
-        : selected
-          ? `Drag the ${selected.name} marker to adjust. Arrow keys nudge it.`
-          : "Select a room to place it.";
+    mode === "draw" ? (
+      `Drag on the plan to outline ${selected?.name}.`
+    ) : selected && (!selected.hotspot || mode === "place") ? (
+      `Tap the plan where ${selected.name} is.`
+    ) : selected ? (
+      <>
+        Drag the {selected.name} marker to adjust.<span className="hidden lg:inline"> Arrow keys nudge it.</span>
+      </>
+    ) : (
+      "Select a room to place it."
+    );
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:py-8">
@@ -224,8 +228,8 @@ export function TourStep() {
         </EmptyState>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)_340px] lg:gap-5">
-          {/* LEFT: rooms */}
-          <aside className="order-1 lg:order-none">
+          {/* LEFT: rooms (min-w-0 keeps the horizontal chip strip from widening the grid on phones) */}
+          <aside className="order-1 min-w-0 lg:order-none">
             <div className="scrollbar-none flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:rounded-3xl lg:bg-surface lg:p-2 lg:ring-1 lg:ring-line">
               {ordered.map((room, i) => {
                 const thumb = thumbFor(room);

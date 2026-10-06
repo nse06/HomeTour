@@ -23,6 +23,7 @@ import {
   ArrowUp,
   Copy,
   FolderInput,
+  Image as ImageIcon,
   ImagePlus,
   Merge,
   MoreHorizontal,
@@ -183,7 +184,11 @@ export function RoomsStep() {
           Add your photos first — we&apos;ll help sort them into rooms.
         </EmptyState>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => setActiveId(null)}>
+        <DndContext
+          id="rooms-board" // a stable id keeps dnd-kit's generated aria ids identical on server and client
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => setActiveId(null)}>
           {unsorted.length ? (
             <Section
               containerId={UNSORTED}
@@ -278,7 +283,7 @@ export function RoomsStep() {
         </div>
       ) : null}
 
-      <div className="mt-10 flex justify-between">
+      <div className="mt-10 flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
         <Link href={`/app/p/${property.id}/photos`} className={buttonClasses("ghost", "md")}>
           Back to photos
         </Link>
@@ -443,6 +448,8 @@ function SortablePhoto({
   const updateRoom = useEditor((s) => s.updateRoom);
   const updateMedia = useEditor((s) => s.updateMedia);
   const deleteMedia = useEditor((s) => s.deleteMedia);
+  const updateProperty = useEditor((s) => s.updateProperty);
+  const isTourCover = useEditor((s) => s.graph.property.coverMediaId === media.id);
   const isCover = room && (room.coverMediaId === media.id);
 
   return (
@@ -456,7 +463,11 @@ function SortablePhoto({
       <MediaThumb media={media} selected={selected} onSelectToggle={onToggle}>
         <div className="absolute inset-x-1.5 bottom-1.5 flex items-end justify-between gap-1">
           <div className="flex min-w-0 flex-col items-start gap-1">
-            {isCover ? (
+            {isTourCover ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-ink/85 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                <ImageIcon className="h-3 w-3" /> Tour cover
+              </span>
+            ) : isCover ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-ink">
                 <Star className="h-3 w-3 fill-current" /> Cover
               </span>
@@ -473,7 +484,7 @@ function SortablePhoto({
               <MenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-ink opacity-0 shadow-sm transition-opacity group-hover:opacity-100 focus:opacity-100 data-[state=open]:opacity-100"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-ink opacity-0 shadow-sm transition-opacity group-hover:opacity-100 focus:opacity-100 data-[state=open]:opacity-100 pointer-coarse:opacity-100"
                   aria-label="Photo options"
                 >
                   <MoreHorizontal className="h-4 w-4" />
@@ -496,6 +507,17 @@ function SortablePhoto({
                   <MenuItem icon={<Star />} onSelect={() => void updateRoom(room.id, { coverMediaId: media.id })}>
                     Use as room cover
                   </MenuItem>
+                ) : null}
+                {media.kind === "photo" ? (
+                  isTourCover ? (
+                    <MenuItem icon={<ImageIcon />} onSelect={() => void updateProperty({ coverMediaId: null })}>
+                      Choose tour cover automatically
+                    </MenuItem>
+                  ) : (
+                    <MenuItem icon={<ImageIcon />} onSelect={() => void updateProperty({ coverMediaId: media.id })}>
+                      Use as tour cover
+                    </MenuItem>
+                  )
                 ) : null}
                 {media.kind === "photo" || media.kind === "pano" ? (
                   <MenuItem icon={<Rotate3d />} onSelect={() => void updateMedia(media.id, { kind: media.kind === "pano" ? "photo" : "pano" })}>

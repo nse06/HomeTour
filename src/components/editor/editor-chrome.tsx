@@ -3,7 +3,7 @@
 import { ArrowLeft, Check, Cloud, Eye, Globe, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { buttonClasses } from "@/components/ui/button";
 import type { AiStatus } from "@/lib/ai/status";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,15 @@ export function EditorChrome({ children, ai, isGuest }: { children: ReactNode; a
   const base = `/app/p/${property.id}`;
   const done = stepCompletion(graph);
   const current = EDITOR_STEPS.find((s) => pathname.startsWith(`${base}/${s.slug}`))?.slug;
+  const navRef = useRef<HTMLElement>(null);
+
+  // On phones the step strip scrolls sideways; keep the current step in view.
+  useEffect(() => {
+    const nav = navRef.current;
+    const active = nav?.querySelector<HTMLElement>('[aria-current="step"]');
+    if (!nav || !active || nav.scrollWidth <= nav.clientWidth) return;
+    nav.scrollTo({ left: active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2, behavior: "smooth" });
+  }, [current]);
 
   return (
     <ChromeContext.Provider value={{ ai, isGuest }}>
@@ -61,7 +70,11 @@ export function EditorChrome({ children, ai, isGuest }: { children: ReactNode; a
               {tour.status === "published" ? "Share" : "Publish"}
             </Link>
           </div>
-          <nav aria-label="Tour setup steps" className="scrollbar-none flex gap-1 overflow-x-auto px-3 pb-2.5 sm:justify-center sm:px-5">
+          <nav
+            ref={navRef}
+            aria-label="Tour setup steps"
+            className="scrollbar-none relative flex gap-1 overflow-x-auto pb-2.5 pl-3 pr-8 [mask-image:linear-gradient(to_right,transparent,#000_12px,#000_calc(100%-28px),transparent)] sm:justify-center sm:px-5 sm:[mask-image:none]"
+          >
             {EDITOR_STEPS.map((step, i) => {
               const active = current === step.slug;
               return (
@@ -98,6 +111,7 @@ export function EditorChrome({ children, ai, isGuest }: { children: ReactNode; a
 function SaveStatus() {
   const pending = useEditor((s) => s.pending);
   const savedAt = useEditor((s) => s.savedAt);
+  const published = useEditor((s) => s.graph.tour.status === "published");
   const uploading = useEditor((s) => s.uploads.some((u) => u.status === "uploading" || u.status === "processing" || u.status === "queued"));
   if (pending > 0 || uploading) {
     return (
@@ -115,7 +129,7 @@ function SaveStatus() {
       </p>
     );
   }
-  return <p className="text-xs text-ink-4">Draft · changes save automatically</p>;
+  return <p className="text-xs text-ink-4">{published ? "Live" : "Draft"} · changes save automatically</p>;
 }
 
 function GuestBanner() {
@@ -129,14 +143,16 @@ function GuestBanner() {
   }, []);
   if (hidden) return null;
   return (
-    <div className="flex items-center justify-center gap-3 bg-accent-soft px-4 py-2 text-center text-[13px] text-ink-2">
-      <span>You&apos;re working as a guest.</span>
-      <Link href="/signup?next=/app" className="font-semibold text-ink underline-offset-4 hover:underline">
-        Save your work with an email
-      </Link>
+    <div className="flex items-center gap-3 bg-accent-soft px-4 py-2 text-[13px] leading-snug text-ink-2 sm:justify-center">
+      <p className="min-w-0 flex-1 sm:flex-none">
+        You&apos;re working as a guest.{" "}
+        <Link href="/signup?next=/app" className="whitespace-nowrap font-semibold text-ink underline underline-offset-4 sm:no-underline sm:hover:underline">
+          Save your work with an email
+        </Link>
+      </p>
       <button
         type="button"
-        className="text-ink-3 hover:text-ink"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-base text-ink-3 hover:bg-black/5 hover:text-ink"
         onClick={() => {
           setHidden(true);
           try {

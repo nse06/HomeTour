@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { analyticsEvents, floors, media, properties, rooms, tours, type Media } from "@/lib/db/schema";
 import { newId } from "@/lib/ids";
 import { slugify } from "@/lib/slug";
+import { pickCoverFrom } from "./derive";
 import { toFloorDTO, toMediaDTO, toPropertyDTO, toRoomDTO, toTourDTO } from "./mappers";
 import type { MediaDTO, PropertyGraph } from "./types";
 
@@ -95,7 +96,7 @@ export async function listDashboardProperties(ownerId: string): Promise<Dashboar
   if (props.length === 0) return [];
   const ids = props.map((p) => p.id);
 
-  const [tourRows, photoRows, roomCounts] = await Promise.all([
+  const [tourRows, photoRows, roomRows] = await Promise.all([
     db.select().from(tours).where(inArray(tours.propertyId, ids)),
     db
       .select()
@@ -103,10 +104,9 @@ export async function listDashboardProperties(ownerId: string): Promise<Dashboar
       .where(and(inArray(media.propertyId, ids), inArray(media.kind, ["photo", "pano"]), eq(media.status, "ready")))
       .orderBy(asc(media.sortOrder), asc(media.createdAt)),
     db
-      .select({ propertyId: rooms.propertyId, n: sql<number>`count(*)` })
+      .select({ id: rooms.id, propertyId: rooms.propertyId, category: rooms.category, sortOrder: rooms.sortOrder, coverMediaId: rooms.coverMediaId })
       .from(rooms)
-      .where(inArray(rooms.propertyId, ids))
-      .groupBy(rooms.propertyId),
+      .where(inArray(rooms.propertyId, ids)),
   ]);
 
   const tourIds = tourRows.map((t) => t.id);
@@ -121,7 +121,8 @@ export async function listDashboardProperties(ownerId: string): Promise<Dashboar
   return props.map((p) => {
     const tour = tourRows.find((t) => t.propertyId === p.id);
     const photos = photoRows.filter((m) => m.propertyId === p.id);
-    const coverRow = photos.find((m) => m.id === p.coverMediaId) ?? photos.find((m) => m.aiCategory === "exterior") ?? photos[0];
+    const propertyRooms = roomRows.filter((r) => r.propertyId === p.id);
+    const coverRow = pickCoverFrom(p.coverMediaId, propertyRooms, photos);
     return {
       id: p.id,
       name: p.name,
@@ -131,7 +132,7 @@ export async function listDashboardProperties(ownerId: string): Promise<Dashboar
       slug: tour?.slug ?? "",
       status: tour?.status ?? "draft",
       photoCount: photos.length,
-      roomCount: Number(roomCounts.find((r) => r.propertyId === p.id)?.n ?? 0),
+      roomCount: propertyRooms.length,
       views: Number(viewRows.find((v) => v.tourId === tour?.id)?.n ?? 0),
       cover: coverRow ? toMediaDTO(coverRow) : null,
     };

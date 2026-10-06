@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { media, properties, rooms, tours, type Media, type Room } from "@/lib/db/schema";
+import { media, rooms, tours, type Media, type Room } from "@/lib/db/schema";
 import { createRoom } from "@/lib/data/mutations";
 import { isNearDuplicate } from "@/lib/media/hash";
 import { categoryOrder, getCategory } from "@/lib/rooms";
@@ -108,15 +108,8 @@ export async function organizeProperty(propertyId: string): Promise<OrganizeSumm
     for (const [i, r] of ordered.entries()) await db.update(rooms).set({ sortOrder: i }).where(eq(rooms.id, r.id));
   }
 
-  // Property cover: best exterior shot, else the best photo overall.
-  const [prop] = await db.select().from(properties).where(eq(properties.id, propertyId)).limit(1);
-  if (prop && (!prop.coverMediaId || !fresh.some((m) => m.id === prop.coverMediaId))) {
-    const candidates = fresh.filter((m) => m.kind === "photo" && !dupes.has(m.id));
-    const best =
-      [...candidates].filter((m) => m.aiCategory === "exterior").sort((a, b) => (b.aiQuality ?? 0) - (a.aiQuality ?? 0))[0] ??
-      [...candidates].sort((a, b) => (b.aiQuality ?? 0) - (a.aiQuality ?? 0))[0];
-    if (best) await db.update(properties).set({ coverMediaId: best.id }).where(eq(properties.id, propertyId));
-  }
+  // The property cover is left to the owner: when none is picked, pickCover() derives it at
+  // read time from the exterior room or the opening room, so it follows later edits.
 
   const unassigned = fresh.filter((m) => m.kind !== "floorplan" && !m.roomId).length;
   return { rooms: roomRows.length, roomsCreated, photosAssigned, duplicates: dupes.size, unassigned };

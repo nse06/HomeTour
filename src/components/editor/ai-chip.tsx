@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- pre-generated variants */
 "use client";
 
-import { Copy, Sparkles } from "lucide-react";
+import { Copy, Sparkles, Tag } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { MediaDTO, RoomDTO } from "@/lib/data/types";
 import { getCategory } from "@/lib/rooms";
@@ -28,6 +28,9 @@ export function AiChip({
   const label = getCategory(ai.category).label;
   const fromFilename = ai.source === "filename";
   const matching = rooms.filter((r) => r.category === ai.category && r.id !== media.roomId);
+  // When the photo already sits in a room of the suggested type, the label just repeats the
+  // room's heading — phones drop it to keep small thumbnails readable.
+  const agrees = rooms.find((r) => r.id === media.roomId)?.category === ai.category;
 
   return (
     <Popover>
@@ -42,8 +45,8 @@ export function AiChip({
           )}
           aria-label={`AI suggestion: ${label}${pct !== null ? `, ${pct}% confidence` : ""}`}
         >
-          {fromFilename ? null : <Sparkles className="h-3 w-3 shrink-0" />}
-          <span className="truncate">{label}</span>
+          {fromFilename ? <Tag className={cn("h-3 w-3 shrink-0", agrees ? "sm:hidden" : "hidden")} /> : <Sparkles className="h-3 w-3 shrink-0" />}
+          <span className={cn("truncate", agrees && "max-sm:hidden")}>{label}</span>
           {pct !== null && !fromFilename ? <span className="text-white/70">{pct}%</span> : null}
         </button>
       </PopoverTrigger>

@@ -1,14 +1,14 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { RoomIcon } from "@/components/room-icon";
 import { LAYOUT_WIDTH, layoutColor } from "@/components/tour/layout-surface";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import type { FloorDTO, RoomDTO } from "@/lib/data/types";
 import { clamp, cn } from "@/lib/utils";
-import { useEditor } from "./store";
+import { useEditor, useEditorApi } from "./store";
 
 type Rect = { x: number; y: number; w: number; h: number };
 type Handle = "nw" | "ne" | "sw" | "se";
@@ -34,16 +34,38 @@ function freeSlot(existing: Rect[], aspect: number): Rect {
 
 const center = (r: Rect) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 });
 
+/** Truncates a label to roughly `maxChars` characters, or hides it when there's no room. */
+function fitLabel(name: string, maxChars: number): string | null {
+  const n = Math.floor(maxChars);
+  if (n < 3) return null;
+  return name.length <= n ? name : `${name.slice(0, n - 1).trimEnd()}…`;
+}
+
 export function LayoutEditor({ floor }: { floor: FloorDTO }) {
   const rooms = useEditor((s) => s.graph.rooms);
   const addRoom = useEditor((s) => s.addRoom);
   const updateRoom = useEditor((s) => s.updateRoom);
   const deleteRoom = useEditor((s) => s.deleteRoom);
+  const editorApi = useEditorApi();
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef<{ id: string; mode: "move" | Handle; start: { x: number; y: number }; rect: Rect } | null>(null);
+  // Boxes whose create request is still in flight, so rapid taps don't land on the same slot.
+  const inFlight = useRef<Rect[]>([]);
   const [live, setLive] = useState<Record<string, Rect>>({});
   const [selected, setSelected] = useState<string | null>(null);
   const [name, setName] = useState("");
+  // SVG units per CSS pixel: keeps labels and handles a constant on-screen size on any screen.
+  const [k, setK] = useState(1);
+
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width > 0) setK(LAYOUT_WIDTH / entry.contentRect.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const aspect = floor.aspectRatio;
   const height = LAYOUT_WIDTH / aspect;
@@ -56,19 +78,42 @@ export function LayoutEditor({ floor }: { floor: FloorDTO }) {
     return { x: (e.clientX - box.left) / box.width, y: (e.clientY - box.top) / box.height };
   };
 
+  /** Reserves a free slot against the latest store state plus boxes still being created. */
+  function reserveSlot(): Rect {
+    const current = editorApi
+      .getState()
+      .graph.rooms.filter((r) => r.floorId === floor.id && r.region?.type === "rect")
+      .map(rectOf);
+    const rect = freeSlot([...current, ...inFlight.current], aspect);
+    inFlight.current.push(rect);
+    return rect;
+  }
+
+  const release = (rect: Rect) => {
+    inFlight.current = inFlight.current.filter((r) => r !== rect);
+  };
+
   async function createBox(roomName: string) {
     const trimmed = roomName.trim();
     if (!trimmed) return;
-    const rect = freeSlot(boxed.map(rectOf), aspect);
-    const room = await addRoom({ name: trimmed, floorId: floor.id, region: { type: "rect", ...rect }, hotspot: center(rect) });
-    if (room) setSelected(room.id);
     setName("");
+    const rect = reserveSlot();
+    try {
+      const room = await addRoom({ name: trimmed, floorId: floor.id, region: { type: "rect", ...rect }, hotspot: center(rect) });
+      if (room) setSelected(room.id);
+    } finally {
+      release(rect);
+    }
   }
 
   async function boxExisting(room: RoomDTO) {
-    const rect = freeSlot(boxed.map(rectOf), aspect);
-    await updateRoom(room.id, { floorId: floor.id, region: { type: "rect", ...rect }, hotspot: center(rect) });
-    setSelected(room.id);
+    const rect = reserveSlot();
+    try {
+      await updateRoom(room.id, { floorId: floor.id, region: { type: "rect", ...rect }, hotspot: center(rect) });
+      setSelected(room.id);
+    } finally {
+      release(rect);
+    }
   }
 
   function onPointerDown(e: ReactPointerEvent, room: RoomDTO, mode: "move" | Handle) {
@@ -152,7 +197,12 @@ export function LayoutEditor({ floor }: { floor: FloorDTO }) {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-3xl bg-surface p-2 ring-1 ring-line sm:p-3">
+      <div className="relative overflow-hidden rounded-3xl bg-surface p-2 ring-1 ring-line sm:p-3">
+        {boxed.length === 0 ? (
+          <p className="pointer-events-none absolute inset-0 flex items-center justify-center px-8 text-center text-sm text-ink-4">
+            Add your first room above — then drag and resize the boxes
+          </p>
+        ) : null}
         <svg
           ref={svgRef}
           viewBox={`0 0 ${LAYOUT_WIDTH} ${height}`}
@@ -176,6 +226,10 @@ export function LayoutEditor({ floor }: { floor: FloorDTO }) {
             const color = layoutColor(i);
             const isSel = room.id === selected;
             const px = { x: r.x * LAYOUT_WIDTH, y: r.y * height, w: r.w * LAYOUT_WIDTH, h: r.h * height };
+            const fontSize = 13 * k;
+            const label = fitLabel(room.name, (px.w - 10 * k) / (fontSize * 0.56));
+            const handle = 14 * k;
+            const hit = 36 * k;
             return (
               <g key={room.id}>
                 <rect
@@ -186,46 +240,52 @@ export function LayoutEditor({ floor }: { floor: FloorDTO }) {
                   rx="10"
                   fill={color.fill}
                   stroke={isSel ? "#151412" : color.stroke}
-                  strokeWidth={isSel ? 3 : 2}
+                  strokeWidth={(isSel ? 2 : 1.25) * k}
                   className="cursor-move"
                   onPointerDown={(e) => onPointerDown(e, room, "move")}
                 />
-                <text
-                  x={px.x + px.w / 2}
-                  y={px.y + px.h / 2 + 5}
-                  textAnchor="middle"
-                  fontSize="16"
-                  fontWeight="600"
-                  fill="#4f4a43"
-                  className="pointer-events-none"
-                >
-                  {room.name}
-                </text>
+                {label && px.h > fontSize * 1.6 ? (
+                  <text
+                    x={px.x + px.w / 2}
+                    y={px.y + px.h / 2 + fontSize * 0.35}
+                    textAnchor="middle"
+                    fontSize={fontSize}
+                    fontWeight="600"
+                    fill="#4f4a43"
+                    className="pointer-events-none"
+                  >
+                    {label}
+                  </text>
+                ) : null}
                 {isSel
-                  ? (["nw", "ne", "sw", "se"] as Handle[]).map((h) => (
-                      <rect
-                        key={h}
-                        x={(h.includes("w") ? px.x : px.x + px.w) - 9}
-                        y={(h.includes("n") ? px.y : px.y + px.h) - 9}
-                        width="18"
-                        height="18"
-                        rx="5"
-                        fill="#ffffff"
-                        stroke="#151412"
-                        strokeWidth="2"
-                        className={h === "nw" || h === "se" ? "cursor-nwse-resize" : "cursor-nesw-resize"}
-                        onPointerDown={(e) => onPointerDown(e, room, h)}
-                      />
-                    ))
+                  ? (["nw", "ne", "sw", "se"] as Handle[]).map((h) => {
+                      const cx = h.includes("w") ? px.x : px.x + px.w;
+                      const cy = h.includes("n") ? px.y : px.y + px.h;
+                      return (
+                        <g
+                          key={h}
+                          className={h === "nw" || h === "se" ? "cursor-nwse-resize" : "cursor-nesw-resize"}
+                          onPointerDown={(e) => onPointerDown(e, room, h)}
+                        >
+                          {/* Generous invisible hit area so corners are easy to grab with a finger. */}
+                          <rect x={cx - hit / 2} y={cy - hit / 2} width={hit} height={hit} fill="transparent" />
+                          <rect
+                            x={cx - handle / 2}
+                            y={cy - handle / 2}
+                            width={handle}
+                            height={handle}
+                            rx={4 * k}
+                            fill="#ffffff"
+                            stroke="#151412"
+                            strokeWidth={1.5 * k}
+                          />
+                        </g>
+                      );
+                    })
                   : null}
               </g>
             );
           })}
-          {boxed.length === 0 ? (
-            <text x={LAYOUT_WIDTH / 2} y={height / 2} textAnchor="middle" fontSize="18" fill="#a7a299">
-              Add your first room above — then drag and resize the boxes
-            </text>
-          ) : null}
         </svg>
       </div>
 

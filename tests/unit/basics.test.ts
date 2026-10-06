@@ -5,6 +5,7 @@ import { can, maxActiveTours } from "@/lib/plans";
 import { categoryFromName, tokenize, uniqueRoomName } from "@/lib/rooms";
 import { slugify, validateSlug } from "@/lib/slug";
 import { ctaHref, propertyFacts, roomSlugs, videoEmbed } from "@/lib/tour";
+import { pickCoverFrom } from "@/lib/data/derive";
 import type { RoomDTO } from "@/lib/data/types";
 
 describe("slugs", () => {
@@ -111,6 +112,32 @@ describe("tour helpers", () => {
       "Built 2019",
     ]);
     expect(propertyFacts({ bedrooms: 1, bathrooms: null, squareFeet: null, yearBuilt: null })).toEqual(["1 bed"]);
+  });
+
+  describe("cover photo", () => {
+    const photo = (id: string, roomId: string | null, kind = "photo") => ({ id, roomId, kind, status: "ready" });
+    // Upload order puts the bathroom first, as a camera roll sorted by name would.
+    const media = [photo("bath-1", "bath"), photo("living-1", "living"), photo("living-2", "living"), photo("pano-1", "kitchen", "pano")];
+    const rooms = [
+      { id: "bath", category: "bathroom", sortOrder: 2, coverMediaId: null },
+      { id: "living", category: "living_room", sortOrder: 0, coverMediaId: "living-2" },
+      { id: "kitchen", category: "kitchen", sortOrder: 1, coverMediaId: null },
+    ];
+
+    it("uses the opening room's cover, not the first upload", () => {
+      expect(pickCoverFrom(null, rooms, media)?.id).toBe("living-2");
+    });
+
+    it("prefers an explicit choice, then the exterior", () => {
+      expect(pickCoverFrom("bath-1", rooms, media)?.id).toBe("bath-1");
+      const withExterior = [...rooms, { id: "ext", category: "exterior", sortOrder: 9, coverMediaId: null }];
+      expect(pickCoverFrom(null, withExterior, [...media, photo("ext-1", "ext")])?.id).toBe("ext-1");
+    });
+
+    it("never derives a flat cover from a 360° photo", () => {
+      expect(pickCoverFrom(null, [{ id: "kitchen", category: "kitchen", sortOrder: 0, coverMediaId: "pano-1" }], media)?.id).not.toBe("pano-1");
+      expect(pickCoverFrom(null, [], [])).toBeNull();
+    });
   });
 });
 

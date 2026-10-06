@@ -30,44 +30,45 @@ export function LayoutSurface({
   showLabels?: boolean;
 }) {
   const height = LAYOUT_WIDTH / aspectRatio;
-  const boxes = rooms.filter((r) => r.region?.type === "rect");
+  const boxes = rooms.flatMap((r) => (r.region?.type === "rect" ? [{ room: r, rect: r.region }] : []));
   return (
-    <svg viewBox={`0 0 ${LAYOUT_WIDTH} ${height}`} className={cn("h-full w-full", className)} aria-hidden="true">
-      <rect x="0" y="0" width={LAYOUT_WIDTH} height={height} rx="18" fill="#fbfaf7" />
-      {boxes.map((room, i) => {
-        if (room.region?.type !== "rect") return null;
-        const { x, y, w, h } = room.region;
-        const color = layoutColor(i);
-        const active = room.id === activeRoomId;
-        return (
-          <g key={room.id}>
+    <div className={cn("relative h-full w-full", className)} aria-hidden="true">
+      <svg viewBox={`0 0 ${LAYOUT_WIDTH} ${height}`} className="absolute inset-0 h-full w-full">
+        <rect x="0" y="0" width={LAYOUT_WIDTH} height={height} rx="18" fill="#fbfaf7" />
+        {boxes.map(({ room, rect }, i) => {
+          const color = layoutColor(i);
+          const active = room.id === activeRoomId;
+          return (
             <rect
-              x={x * LAYOUT_WIDTH}
-              y={y * height}
-              width={w * LAYOUT_WIDTH}
-              height={h * height}
+              key={room.id}
+              x={rect.x * LAYOUT_WIDTH}
+              y={rect.y * height}
+              width={rect.w * LAYOUT_WIDTH}
+              height={rect.h * height}
               rx="10"
               fill={color.fill}
               stroke={active ? "#151412" : color.stroke}
-              strokeWidth={active ? 3 : 2}
+              strokeWidth={active ? 2 : 1.25}
+              vectorEffect="non-scaling-stroke"
             />
-            {showLabels ? (
-              <text
-                x={(x + w / 2) * LAYOUT_WIDTH}
-                y={(y + h) * height - 16}
-                textAnchor="middle"
-                fontFamily="var(--font-inter), system-ui, sans-serif"
-                fontSize="15"
-                fontWeight="600"
-                letterSpacing="1.5"
-                fill="#6e685f"
-              >
-                {room.name.toUpperCase()}
-              </text>
-            ) : null}
-          </g>
-        );
-      })}
-    </svg>
+          );
+        })}
+      </svg>
+      {/* Labels are HTML (not SVG text) so they stay legible at any rendered size; a container
+          query hides them in boxes too narrow to hold one. Top-left keeps them clear of the pin. */}
+      {showLabels
+        ? boxes.map(({ room, rect }) => (
+            <div
+              key={room.id}
+              className="@container absolute overflow-hidden"
+              style={{ left: `${rect.x * 100}%`, top: `${rect.y * 100}%`, width: `${rect.w * 100}%`, height: `${rect.h * 100}%` }}
+            >
+              <span className="hidden truncate px-2 pt-1.5 text-[9.5px] font-semibold uppercase tracking-[0.12em] text-[#6e685f] @min-[60px]:block @min-[150px]:text-[11px]">
+                {room.name}
+              </span>
+            </div>
+          ))
+        : null}
+    </div>
   );
 }

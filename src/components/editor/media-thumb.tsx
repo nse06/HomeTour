@@ -69,7 +69,9 @@ export function MediaThumb({
           }}
           className={cn(
             "absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full ring-2 transition-all",
-            selected ? "bg-ink text-white ring-white" : "bg-white/70 text-transparent ring-white/90 opacity-0 group-hover:opacity-100 focus:opacity-100",
+            selected
+              ? "bg-ink text-white ring-white"
+              : "bg-white/70 text-transparent ring-white/90 opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-coarse:opacity-100",
           )}
           aria-label={selected ? "Deselect photo" : "Select photo"}
           aria-pressed={selected}

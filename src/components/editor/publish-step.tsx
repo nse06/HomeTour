@@ -185,18 +185,18 @@ export function PublishStep() {
 
       <Link
         href={`/app/p/${property.id}/analytics`}
-        className="mt-6 flex items-center justify-between rounded-3xl bg-surface p-6 ring-1 ring-line transition-colors hover:bg-sunken/50 sm:p-8"
+        className="mt-6 flex items-center justify-between gap-3 rounded-3xl bg-surface p-6 ring-1 ring-line transition-colors hover:bg-sunken/50 sm:p-8"
       >
-        <span className="flex items-center gap-4">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sunken">
+        <span className="flex min-w-0 items-center gap-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sunken">
             <BarChart3 className="h-5 w-5 text-ink-2" />
           </span>
-          <span>
+          <span className="min-w-0">
             <span className="block font-semibold text-ink">Visitor analytics</span>
-            <span className="text-sm text-ink-3">Views, time spent, most-viewed rooms, QR scans and CTA clicks</span>
+            <span className="mt-0.5 block text-sm leading-snug text-ink-3">Views, time spent, most-viewed rooms, QR scans and CTA clicks</span>
           </span>
         </span>
-        <span className="text-ink-3">→</span>
+        <span className="shrink-0 text-ink-3">→</span>
       </Link>
     </div>
   );

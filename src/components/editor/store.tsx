@@ -266,6 +266,7 @@ function createEditorStore(initial: PropertyGraph) {
         const gone = new Set(ids);
         patchGraph((g) => ({
           ...g,
+          property: g.property.coverMediaId && gone.has(g.property.coverMediaId) ? { ...g.property, coverMediaId: null } : g.property,
           media: g.media.filter((m) => !gone.has(m.id)),
           rooms: g.rooms.map((r) => (r.coverMediaId && gone.has(r.coverMediaId) ? { ...r, coverMediaId: null } : r)),
         }));

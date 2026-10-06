@@ -10,20 +10,34 @@ export function navigableRooms(graph: Pick<PropertyGraph, "rooms" | "media">): R
     .filter((r) => withMedia.has(r.id) || (r.description && r.description.trim().length > 0));
 }
 
-/** Cover photo: explicit choice → first exterior photo → first photo. */
-export function pickCover(graph: Pick<PropertyGraph, "property" | "rooms" | "media">): MediaDTO | null {
-  const photos = graph.media.filter((m) => (m.kind === "photo" || m.kind === "pano") && m.status === "ready");
+type CoverMedia = { id: string; kind: string; status: string; roomId: string | null };
+type CoverRoom = { id: string; category: string; sortOrder: number; coverMediaId: string | null };
+
+/**
+ * Cover photo: explicit choice → the exterior room's cover → the opening room's cover →
+ * first photo. Works on DTOs and raw rows alike.
+ */
+export function pickCoverFrom<M extends CoverMedia>(propertyCoverId: string | null, rooms: CoverRoom[], media: M[]): M | null {
+  const photos = media.filter((m) => (m.kind === "photo" || m.kind === "pano") && m.status === "ready");
   if (photos.length === 0) return null;
-  const explicit = graph.property.coverMediaId && photos.find((m) => m.id === graph.property.coverMediaId);
+  const explicit = propertyCoverId && photos.find((m) => m.id === propertyCoverId);
   if (explicit) return explicit;
-  const exterior = graph.rooms.find((r) => r.category === "exterior");
-  if (exterior) {
-    const cover = exterior.coverMediaId && photos.find((m) => m.id === exterior.coverMediaId);
+  // Panoramas are distorted when shown flat, so room-derived covers stick to regular photos.
+  const roomCover = (room: CoverRoom) =>
+    (room.coverMediaId && photos.find((m) => m.id === room.coverMediaId && m.kind === "photo")) ||
+    photos.find((m) => m.roomId === room.id && m.kind === "photo");
+  const exterior = rooms.find((r) => r.category === "exterior");
+  const fromExterior = exterior && roomCover(exterior);
+  if (fromExterior) return fromExterior;
+  for (const room of [...rooms].sort((a, b) => a.sortOrder - b.sortOrder)) {
+    const cover = roomCover(room);
     if (cover) return cover;
-    const first = photos.find((m) => m.roomId === exterior.id && m.kind === "photo");
-    if (first) return first;
   }
   return photos.find((m) => m.kind === "photo") ?? photos[0];
+}
+
+export function pickCover(graph: Pick<PropertyGraph, "property" | "rooms" | "media">): MediaDTO | null {
+  return pickCoverFrom(graph.property.coverMediaId, graph.rooms, graph.media);
 }
 
 /** Photos of a room in display order, cover first. */

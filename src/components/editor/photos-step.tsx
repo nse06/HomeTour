@@ -100,7 +100,7 @@ export function PhotosStep() {
           ))}
           {sorted.map((m) => (
             <MediaThumb key={m.id} media={m}>
-              <div className="absolute bottom-1.5 right-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+              <div className="absolute bottom-1.5 right-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100">
                 <Menu>
                   <MenuTrigger asChild>
                     <button
