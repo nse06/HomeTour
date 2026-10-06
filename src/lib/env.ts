@@ -9,23 +9,51 @@ function bool(value: string | undefined, fallback = false): boolean {
 }
 
 export function getAppUrl(): string {
-  const url = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "http://localhost:3000";
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  const url = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || (vercel ? `https://${vercel}` : "http://localhost:3000");
   return url.replace(/\/+$/, "");
 }
 
+/** Store id for Vercel Blob, from an OIDC-style BLOB_STORE_ID or the read-write token. */
+function blobStoreId(): string | null {
+  const explicit = process.env.BLOB_STORE_ID?.trim();
+  if (explicit) return explicit.replace(/^store_/, "");
+  // Token format: vercel_blob_rw_<storeId>_<secret> (the SDK parses it the same way).
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+  return token?.split("_")[3] || null;
+}
+
 export const env = {
+  /** libSQL URL: a local SQLite file by default, or Turso (the Vercel integration sets TURSO_*). */
   get databaseUrl() {
-    return process.env.DATABASE_URL || "file:./.data/hometour.db";
+    return process.env.DATABASE_URL || process.env.TURSO_DATABASE_URL || process.env.TURSO_CONNECTION_URL || "file:./.data/hometour.db";
   },
   get databaseAuthToken() {
-    return process.env.DATABASE_AUTH_TOKEN || undefined;
+    return process.env.DATABASE_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN || undefined;
   },
 
-  get storageDriver(): "local" | "s3" {
-    return process.env.STORAGE_DRIVER === "s3" ? "s3" : "local";
+  /** Explicit STORAGE_DRIVER wins; otherwise a connected Vercel Blob store is used automatically. */
+  get storageDriver(): "local" | "s3" | "blob" {
+    const d = process.env.STORAGE_DRIVER;
+    if (d === "s3" || d === "blob" || d === "local") return d;
+    return blobStoreId() ? "blob" : "local";
   },
   get storageDir() {
     return process.env.STORAGE_DIR || "./.data/storage";
+  },
+  blob: {
+    get storeId() {
+      return blobStoreId();
+    },
+  },
+  /**
+   * Largest request body the host accepts. Vercel functions cap bodies at 4.5 MB, so the
+   * editor re-encodes bigger images in the browser before uploading. null = no extra cap.
+   */
+  get uploadBodyLimitBytes(): number | null {
+    const explicit = Number(process.env.UPLOAD_BODY_LIMIT_BYTES);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+    return process.env.VERCEL ? 4_200_000 : null;
   },
   s3: {
     get bucket() {

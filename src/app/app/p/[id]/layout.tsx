@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { properties } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { aiStatus } from "@/lib/ai/status";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ export default async function EditorLayout(props: LayoutProps<"/app/p/[id]">) {
   if (!graph || owner?.ownerId !== user.id) notFound();
 
   return (
-    <EditorProvider key={id} graph={graph}>
+    <EditorProvider key={id} graph={graph} options={{ uploadLimitBytes: env.uploadBodyLimitBytes }}>
       <EditorChrome isGuest={user.isGuest} ai={aiStatus()}>
         {props.children}
       </EditorChrome>

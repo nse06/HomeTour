@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { and, eq, max } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { media, type Media, type MediaKind, type VariantName } from "@/lib/db/schema";
@@ -88,7 +88,9 @@ export async function ingestUpload(input: {
     throw new IngestError("We couldn't read that image. Try exporting it again as JPG or PNG.");
   }
 
-  const originalKey = `o/${propertyId}/${id}.${type.ext}`;
+  // Originals keep the camera's metadata (often GPS). Public object stores serve every key, and
+  // ids appear in variant URLs, so the original's key carries an unguessable suffix.
+  const originalKey = `o/${propertyId}/${id}-${randomBytes(16).toString("hex")}.${type.ext}`;
   await Promise.all([
     store.put(originalKey, bytes, type.mime),
     ...processed.variants.map((v) => store.put(variantKey(propertyId, id, v.name), v.buffer, "image/webp")),

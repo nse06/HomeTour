@@ -4,6 +4,7 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { createStore, useStore, type StoreApi } from "zustand";
 import { api, ApiError, uploadFile } from "@/lib/api-client";
+import { fitImageForUpload } from "@/lib/image-fit";
 import type {
   FloorDTO,
   MediaDTO,
@@ -81,7 +82,14 @@ function fail(err: unknown, fallback = "Couldn't save that change.") {
   toast.error(message);
 }
 
-function createEditorStore(initial: PropertyGraph) {
+export interface EditorOptions {
+  /** Request-size cap of the host (e.g. Vercel's 4.5 MB); larger images are shrunk in the browser. */
+  uploadLimitBytes: number | null;
+}
+
+const formatMb = (bytes: number) => `${Math.floor(bytes / 1_000_000)} MB`;
+
+function createEditorStore(initial: PropertyGraph, options: EditorOptions) {
   return createStore<EditorState>()((set, get) => {
     const pid = () => get().graph.property.id;
 
@@ -116,9 +124,18 @@ function createEditorStore(initial: PropertyGraph) {
     async function runUpload(item: UploadItem) {
       setUpload(item.id, { status: "uploading", progress: 0 });
       try {
-        const query = new URLSearchParams({ filename: item.name });
+        const file = await fitImageForUpload(item.file, options.uploadLimitBytes);
+        if (options.uploadLimitBytes !== null && file.size > options.uploadLimitBytes) {
+          throw new ApiError(
+            file.type.startsWith("video/")
+              ? `Videos over ${formatMb(options.uploadLimitBytes)} can't be uploaded here yet. Add a YouTube or Vimeo link to the room instead.`
+              : `This file is over ${formatMb(options.uploadLimitBytes)} and couldn't be shrunk in the browser.`,
+            413,
+          );
+        }
+        const query = new URLSearchParams({ filename: file.name });
         if (item.roomId) query.set("roomId", item.roomId);
-        const { media } = await uploadFile<{ media: MediaDTO }>(`/api/properties/${pid()}/media?${query}`, item.file, {
+        const { media } = await uploadFile<{ media: MediaDTO }>(`/api/properties/${pid()}/media?${query}`, file, {
           onProgress: (f) => setUpload(item.id, { progress: f, status: f >= 1 ? "processing" : "uploading" }),
         });
         let final = media;
@@ -185,13 +202,15 @@ function createEditorStore(initial: PropertyGraph) {
         await save(() => api.del(`/api/floors/${id}`));
       },
 
-      async uploadFloorPlan(floorId, file, filename, onProgress) {
+      async uploadFloorPlan(floorId, blob, filename, onProgress) {
         const res = await save(
-          () =>
-            uploadFile<{ floor: FloorDTO }>(`/api/floors/${floorId}/plan?filename=${encodeURIComponent(filename)}`, file, {
+          async () => {
+            const file = await fitImageForUpload(new File([blob], filename, { type: blob.type }), options.uploadLimitBytes);
+            return uploadFile<{ floor: FloorDTO }>(`/api/floors/${floorId}/plan?filename=${encodeURIComponent(file.name)}`, file, {
               method: "PUT",
               onProgress,
-            }),
+            });
+          },
           { resyncOnError: false },
         );
         if (!res) return false;
@@ -372,8 +391,8 @@ async function captureVideoPoster(file: File): Promise<Blob | null> {
 
 const EditorContext = createContext<StoreApi<EditorState> | null>(null);
 
-export function EditorProvider({ graph, children }: { graph: PropertyGraph; children: ReactNode }) {
-  const [store] = useState(() => createEditorStore(graph));
+export function EditorProvider({ graph, options, children }: { graph: PropertyGraph; options: EditorOptions; children: ReactNode }) {
+  const [store] = useState(() => createEditorStore(graph, options));
   return <EditorContext.Provider value={store}>{children}</EditorContext.Provider>;
 }
 
